@@ -18,7 +18,16 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* 解决TS中无法找到模块“vuex”的声明文件。配置TS对别名@检查。 */
+    "baseUrl": ".",
+    "paths": {
+      "vuex": ["./node_modules/vuex/types"],
+      "@/*": ["src/*"]
+    },
+    /* 解决Virtual script not found */
+    "allowJs": true,
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
