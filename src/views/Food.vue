@@ -1,6 +1,6 @@
 <template>
-<div>
-  <div v-for="(value, key) in foodSortList" :key="key">
+<div>{{ store.test() }}
+  <!-- <div v-for="(value, key) in foodSortList" :key="key">
     <div class="container">
       <div style="flex: 1;">{{ key }}</div>
       <div style="flex: 5;">
@@ -14,13 +14,14 @@
         </div>
       </div>
     </div>
-  </div>  
+  </div>   -->
 </div>
 </template>
 
 <script>
 import { computed, onMounted, ref } from 'vue'
-import { useStore, mapGetters } from "vuex";
+// import { useStore, mapGetters } from "vuex";
+import { useStore } from "@/vuex4";
 
 export default {
   name: '',
@@ -40,7 +41,8 @@ export default {
     })
     
     return {
-      foodSortList
+      foodSortList,
+      store
     }
   }
 }
