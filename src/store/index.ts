@@ -1,18 +1,16 @@
 // import { createStore  } from 'vuex'
 import { createStore  } from '../vuex4'
-import {foodModule} from './food/foodModule'
 import {foodSortModule} from './foodSort/foodSortModule'
 import {hotelSortModule} from './hotelSort/hotelSortModule'
 import type {RootState} from './rootState'
 
 // 注意，store切割的设计方案很糟糕，依据高内聚低耦合的设计原则，所以模块不要分割。
 const store = createStore<RootState>({
-  // modules: {
-  //   foodModule,
-  //   foodSortModule: foodSortModule,
-  //   hotelSortModule,
-  // }
-  state: {
+  modules: {
+    foodSortModule: foodSortModule,
+    hotelSortModule,
+  }
+  /* state: {
     navList: [
       '单模块state测试数据1',
       '单模块state测试数据2',
@@ -38,7 +36,7 @@ const store = createStore<RootState>({
       }, 5);
     }
   
-  },
+  }, */
 })
 
 export default store

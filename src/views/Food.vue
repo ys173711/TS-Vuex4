@@ -34,14 +34,14 @@ export default {
     const store = useStore()
     onMounted(() => {
       // 获取美食数据
-      store.dispatch('foodSortModule/FindFoodSortList')
+      // store.dispatch('foodSortModule/FindFoodSortList')
     })
-    const foodSortList = computed(() => {
-      return store.getters['foodSortModule/getFoodSortList']
-    })
-    
+    // const foodSortList = computed(() => {
+    //   return store.getters['foodSortModule/getFoodSortList']
+    // })
+    console.log('store: ', store)
     return {
-      foodSortList,
+      // foodSortList,
       store
     }
   }
