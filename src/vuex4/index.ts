@@ -63,14 +63,40 @@ export function useStore<S=any>(): Store<S> {
 class Store<S=any> {
   // 从根模块开始管理所有模块，建立关联
   moduleCollection: ModuleCollection<S>;
+  mutations: Record<string, any> = {};
+  actions: Record<string, any> = {};
+  commit: Commit;
+  dispatch: Dispatch;
+
   constructor(options: StoreOptions<S>) { 
     this.moduleCollection = new ModuleCollection<S>(options);
+
+    // 对commit优化处理，即可属性访问也可以方法访问
+    const commit = this.commit_;
+    this.commit = function(methodName: string, payload: any) {
+      commit.call(this, methodName, payload)
+    }
+    // 对dispatch优化处理，即可属性访问也可以方法访问
+    const dispatch = this.dispatch_;
+    this.dispatch = function(methodName: string, payload: any) {
+      dispatch.call(this, methodName, payload)
+    }
   }
   install(app: App) {
     app.provide(injectKey, this); // 给app添加属性能访问store对象
   }
   test() {
     return "Store:test: "
+  }
+  commit_(methodName: string, payload: any) {
+    const fn = this.mutations[methodName];
+    if(!fn) return console.error('[vuex] unknown mutation type: ' + methodName);
+    fn(payload);
+  }
+  dispatch_(methodName: string, payload: any) {
+    const fn = this.actions[methodName];
+    if(!fn) return console.error('[vuex] unknown action type: ' + methodName);
+    fn(payload);
   }
 }
 
@@ -121,8 +147,11 @@ class ModuleCollection<R> {
     // 递归
     if (rawModule.modules) {
       const sonModules = rawModule.modules;
-      Object.keys(sonModules).forEach(key => {
+      /* Object.keys(sonModules).forEach(key => {
         this.register(path.concat(key), sonModules[key]);
+      }) */ // 优化代码
+      Util.forEach(sonModules, (key: string, module: Module<any, R>) => {
+        this.register(path.concat(key), module);
       })
     }
   }
@@ -134,7 +163,12 @@ class ModuleCollection<R> {
   }
 }
 
-
+// 工具类
+class Util {
+  static forEach(obj: Record<string, any>, fn: Function) {
+    Object.keys(obj).forEach(key => fn(key, obj[key]))
+  }
+}
 
 
 
