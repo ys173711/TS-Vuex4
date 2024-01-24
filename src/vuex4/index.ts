@@ -67,6 +67,7 @@ class Store<S=any> {
   actions: Record<string, any> = {};
   commit: Commit;
   dispatch: Dispatch;
+  getters: GetterTree<any, S> = {};
 
   constructor(options: StoreOptions<S>) { 
     this.moduleCollection = new ModuleCollection<S>(options);
@@ -134,7 +135,12 @@ class ModuleWrapper<S, R> {
   getChild(key: string) {
     return this.children[key];
   }
-
+  // 注册store.getters
+  forEachGetter(fn: GetterToKey<R>) {
+    this.rawModule.getters && Object.keys(this.rawModule.getters).forEach(key => {
+      fn(this.rawModule.getters![key], key) 
+    })
+  } 
 }
 
 // ModuleCollection类：管理所有模块
@@ -170,6 +176,14 @@ class ModuleCollection<R> {
       return module.getChild(key)
     }, this.root)
   }
+  // 
+  getNamespace(path: Array<string>) {
+    let moduleWrapper = this.root;
+    return path.reduce((namespace, key) => {
+      moduleWrapper = moduleWrapper.getChild(key);
+      return namespace + (moduleWrapper.namespaced ? key + '/' : '');
+    }, '')
+  }
 }
 
 // 工具类
@@ -194,17 +208,29 @@ function installModule<R>(store: Store<R>, rootState: R, path: Array<string>, mo
       return (curState as any)[val]
     }, rootState)
   }
-  
+
+  // 注册store.getters
+  const namespace = store.moduleCollection.getNamespace(path);
+  // console.log('namespace: ', namespace)
+  module.forEachGetter((getter, key) => {
+    // 完整getter方法名
+    const namespaceType = namespace + key;
+    // store.getters[namespaceType] = getter // 考虑到外部使用时访问方法名就执行
+    Object.defineProperty(store.getters, namespaceType, {
+      get: () => getter(module.state, store.getters, rootState, store.getters)
+    })
+  })
 
   // 递归
-  if(Object.keys(module.children).length > 0) {
-    Util.forEach(module.children, (key, subModule: ModuleWrapper<any, R>) => {
-      installModule(store, rootState, path.concat(key), subModule)
-    })
-  }
+  Util.forEach(module.children, (key, subModule: ModuleWrapper<any, R>) => {
+    installModule(store, rootState, path.concat(key), subModule)
+  })
+
+  
   
 }
 
+type GetterToKey<R> = (getter: Getter<any, R>, key: string) => any;
 
 
 

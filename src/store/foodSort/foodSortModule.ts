@@ -12,6 +12,9 @@ export const foodSortModule: Module<FoodSortInfoList, RootState> = {
   getters: {
     getFoodSortList(state: any) {
       return state.foodSortInfoList
+    },
+    getFoodSortList_2(state: any) {
+      return state.foodSortInfoList
     }
   },
   mutations: {

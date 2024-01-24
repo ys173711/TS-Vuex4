@@ -22,6 +22,8 @@
 import { computed, onMounted, ref } from 'vue'
 // import { useStore, mapGetters } from "vuex";
 import { useStore } from "@/vuex4";
+import getters_foodSortModule from '@/store/foodSort/upgradeGetters'
+import getters_foodModule from '@/store/food/upgradeGetters'
 
 export default {
   name: '',
@@ -35,11 +37,13 @@ export default {
     onMounted(() => {
       // 获取美食数据
       // store.dispatch('foodSortModule/FindFoodSortList')
-    })
-    // const foodSortList = computed(() => {
-    //   return store.getters['foodSortModule/getFoodSortList']
-    // })
+    }) 
+    
     console.log('store: ', store)
+    console.log('store.getters: ', store.getters['foodSortModule/getFoodSortList'])
+    console.log('store.getters: ', getters_foodSortModule['foodSortModule/getFoodSortt']) // 可以自动推导出来
+    console.log('store.getters: ', getters_foodModule['foodSortModule/foodModule/getFoodList'])
+    
     return {
       // foodSortList,
       store
