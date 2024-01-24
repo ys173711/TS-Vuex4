@@ -81,6 +81,13 @@ class Store<S=any> {
     this.dispatch = function(methodName: string, payload: any) {
       dispatch.call(this, methodName, payload)
     }
+
+    // 注册多模块state
+    const rootModule = this.moduleCollection.root;
+    const rootModuleState = rootModule.state;
+    console.log('开始注册模块installModule')
+    installModule(this, rootModuleState, [], rootModule)
+    console.log('注册模块installModule结束，rootState: ', rootModuleState)
   }
   install(app: App) {
     app.provide(injectKey, this); // 给app添加属性能访问store对象
@@ -98,6 +105,8 @@ class Store<S=any> {
     if(!fn) return console.error('[vuex] unknown action type: ' + methodName);
     fn(payload);
   }
+  // 
+  
 }
 
 // ModuleWrapper类：封装和管理某一个模块
@@ -138,7 +147,7 @@ class ModuleCollection<R> {
   // 添加子模块
   register(path: Array<string>, rawModule: Module<any, R>) {
     let newModule = new ModuleWrapper<any, R>(rawModule);
-    if (path.length === 0) { // 根模块
+    if (!path.length) { // 根模块
       this.root = newModule
     } else { // 子模块添加到父级模块中
       const parentModule = this.getParentModule(path.slice(0, -1))
@@ -150,7 +159,7 @@ class ModuleCollection<R> {
       /* Object.keys(sonModules).forEach(key => {
         this.register(path.concat(key), sonModules[key]);
       }) */ // 优化代码
-      Util.forEach(sonModules, (key: string, module: Module<any, R>) => {
+      Util.forEach(sonModules, (key, module: Module<any, R>) => {
         this.register(path.concat(key), module);
       })
     }
@@ -165,12 +174,36 @@ class ModuleCollection<R> {
 
 // 工具类
 class Util {
-  static forEach(obj: Record<string, any>, fn: Function) {
+  static forEach(obj: Record<string, any>, fn: (key: string, value: any) => void) {
     Object.keys(obj).forEach(key => fn(key, obj[key]))
   }
 }
 
+// 注册多模块state
+function installModule<R>(store: Store<R>, rootState: R, path: Array<string>, module: ModuleWrapper<any, R>) {
+  if(!path.length) { // 根模块
+    
+  } else { // 子模块
+    // 获取父级模块的state
+    const parentState: any = getParentState(rootState, path.slice(0, -1));
+    parentState[path[path.length - 1]] = module.state;
+  }
 
+  function getParentState<R>(rootState: R, path: Array<string>) {
+    return path.reduce((curState, val) => {
+      return (curState as any)[val]
+    }, rootState)
+  }
+  
+
+  // 递归
+  if(Object.keys(module.children).length > 0) {
+    Util.forEach(module.children, (key, subModule: ModuleWrapper<any, R>) => {
+      installModule(store, rootState, path.concat(key), subModule)
+    })
+  }
+  
+}
 
 
 

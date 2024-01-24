@@ -6,6 +6,13 @@ import type {RootState} from './rootState'
 
 // 注意，store切割的设计方案很糟糕，依据高内聚低耦合的设计原则，所以模块不要分割。
 const store = createStore<RootState>({
+  state: {
+    navList: [
+      '测试数据1',
+      '测试数据2',
+      'ok',
+    ]
+  },
   modules: {
     foodSortModule: foodSortModule,
     hotelSortModule,
