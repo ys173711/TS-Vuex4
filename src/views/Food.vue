@@ -39,10 +39,26 @@ export default {
       // store.dispatch('foodSortModule/FindFoodSortList')
     }) 
     
+    // 测试store
+    console.log('测试store ...')
     console.log('store: ', store)
+    
+    // 测试store.getters
+    console.log('测试store.getters ...')
     console.log('store.getters: ', store.getters['foodSortModule/getFoodSortList'])
-    console.log('store.getters: ', getters_foodSortModule['foodSortModule/getFoodSortt']) // 可以自动推导出来
+    console.log('store.getters: ', getters_foodSortModule['foodSortModule/getFoodSortList']) // 可以自动推导出来
     console.log('store.getters: ', getters_foodModule['foodSortModule/foodModule/getFoodList'])
+
+    // 测试store.mutation
+    console.log('测试store.mutation ...')
+    store.commit('foodSortModule/foodModule/FindFoodList', {100: {
+      foodid: 100, shop: "x店铺",
+      foodName: "x食品", price: 100,
+    }},)
+
+    // 测试store.action
+    console.log('测试store.action ...')
+    store.dispatch('foodSortModule/foodModule/FindFoodList')
     
     return {
       // foodSortList,

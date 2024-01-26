@@ -23,4 +23,4 @@ const state: FoodInfoList = {
 } 
 
 export { state } 
-export type {Food, FoodInfoList}
+export type {Food, FoodInfoList, FoodState}

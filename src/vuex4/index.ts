@@ -137,11 +137,26 @@ class ModuleWrapper<S, R> {
   }
   // 注册store.getters
   forEachGetter(fn: GetterToKey<R>) {
-    this.rawModule.getters && Object.keys(this.rawModule.getters).forEach(key => {
-      fn(this.rawModule.getters![key], key) 
+    this.rawModule.getters && Util.forEach(this.rawModule.getters, (key, getter) => {
+      fn(getter, key);
     })
   } 
+  // 注册store.mutations
+  forEachMutation(fn: MutationToKey<S>) {
+    this.rawModule.mutations && Util.forEach(this.rawModule.mutations, (key, mutation) => {
+      fn(mutation, key);
+    })
+  }
+  // 注册store.actions
+  forEachAction(fn: ActionToKey<S, R>) {
+    this.rawModule.actions && Util.forEach(this.rawModule.actions, (key, action) => {
+      fn(action, key);
+    })
+  }
 }
+type GetterToKey<R> = (getter: Getter<any, R>, key: string) => any;
+type MutationToKey<R> = (mutation: Mutation<R>, key: string) => any;
+type ActionToKey<S,R> = (action: Action<S, R>, key: string) => any;
 
 // ModuleCollection类：管理所有模块
 class ModuleCollection<R> {
@@ -203,11 +218,7 @@ function installModule<R>(store: Store<R>, rootState: R, path: Array<string>, mo
     parentState[path[path.length - 1]] = module.state;
   }
 
-  function getParentState<R>(rootState: R, path: Array<string>) {
-    return path.reduce((curState, val) => {
-      return (curState as any)[val]
-    }, rootState)
-  }
+  
 
   // 注册store.getters
   const namespace = store.moduleCollection.getNamespace(path);
@@ -221,16 +232,58 @@ function installModule<R>(store: Store<R>, rootState: R, path: Array<string>, mo
     })
   })
 
+  // 注册store.mutations
+  module.forEachMutation((mutation, key) => {
+    // 完整mutation方法名
+    const namespaceType = namespace + key;
+    store.mutations[namespaceType] = (payload: any) => mutation.call(store, module.state, payload) // mutation(module.state, payload)也可以，call保证外部使用mutations方法内部可通过this访问store对象
+  })
+
+  // 
+  let actionContext: ActionContext<any, R> = localContext(store, namespace);
+  // 注册store.actions
+  module.forEachAction((action, key) => {
+    // 完整action方法名
+    const namespaceType = namespace + key;
+    store.actions[namespaceType] = (payload: any) => action.call(store, {
+      dispatch: actionContext.dispatch,
+      commit: actionContext.commit,
+      state: actionContext.state,
+      rootState: actionContext.rootState
+    }, payload)
+  })
+  
+
   // 递归
   Util.forEach(module.children, (key, subModule: ModuleWrapper<any, R>) => {
     installModule(store, rootState, path.concat(key), subModule)
   })
 
-  
+  function getParentState<R>(rootState: R, path: Array<string>) {
+    return path.reduce((curState, val) => {
+      return (curState as any)[val]
+    }, rootState)
+  }
+
+  function localContext<R>(store: Store<R>, namespace: string) {
+    const noNamespace = namespace === ''; // 判断是否是根模块
+    return {
+      dispatch: noNamespace ? store.dispatch : (type: string, payload: any) => {
+        type = namespace + type;
+        return store.dispatch(type, payload)
+      },
+      commit: noNamespace ? store.commit : (type: string, payload: any) => {
+        type = namespace + type;
+        return store.commit(type, payload)
+      },
+      state: module.state,
+      rootState: store.moduleCollection.root.state
+    }
+  }
   
 }
 
-type GetterToKey<R> = (getter: Getter<any, R>, key: string) => any;
+// 最后功能：引入Vue3 reactive对state进行响应式处理
 
 
 
